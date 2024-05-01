@@ -1,0 +1,28 @@
+# Ignore macOS system files
+.DS_Store
+
+# Ignore Python virtual environments
+venv/
+env/
+.tp_env/
+
+# Ignore Python bytecode
+__pycache__/
+*.pyc
+
+# Ignore distribution / build directories
+dist/
+build/
+*.egg-info/
+
+# Ignore IDE settings
+.idea/
+.vscode/
+
+# Ignore log files and databases
+*.log
+*.sqlite
+
+# Ignore Environment variables
+.env
+.env.*
