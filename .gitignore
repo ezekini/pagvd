@@ -26,3 +26,6 @@ build/
 # Ignore Environment variables
 .env
 .env.*
+
+# Ignore Credentials
+.pem
