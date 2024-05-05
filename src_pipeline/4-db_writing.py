@@ -23,12 +23,11 @@ yesterday = datetime.now() - timedelta(days=1)
 def get_date_from_db_table(schema, table) -> datetime:
     query_dates = f"""SELECT MAX(date) AS mindate FROM {schema}.{table}"""
     engine = create_db_connection()
-    with engine.connect() as connection:  # conn = engine.connect()
-        df = pd.read_sql(text(query_dates), connection)
-    if df["mindate"].loc[0] is not None:
-        min_date = pd.to_datetime(df["mindate"].iloc[0])
-        min_date = min_date.to_pydatetime()
-    else:  # return an old date if table is empty
+    with engine.connect() as connection:
+        result = connection.execute(text(query_dates))
+        min_date = result.fetchone()[0]
+        min_date = pd.to_datetime(min_date)
+    if min_date is None:  # return an old date if table is empty
         min_date = datetime.strptime("2024-04-01", "%Y-%m-%d")
     return min_date
 
