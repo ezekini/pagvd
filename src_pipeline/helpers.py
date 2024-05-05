@@ -2,9 +2,11 @@ import boto3
 from os import environ
 from sqlalchemy import create_engine, text, Table, MetaData, insert
 import psycopg2
+import psycopg2.extras as extras
 import pandas as pd
 from io import StringIO
 from datetime import datetime, timedelta
+from math import ceil
 
 
 def create_s3():
@@ -54,20 +56,38 @@ def create_db_connection():
     return engine
 
 
-def insert_df_to_db(table_name, schema, data):
-    print("inserting data...")
-    engine = create_db_connection()
-    df_to_insert = data
-    print("Inserting {} values".format(len(df_to_insert)))
-    with engine.connect() as conn:
-        df_to_insert.to_sql(
-            name=table_name,
-            con=conn,
-            schema=schema,
-            if_exists="append",
-            index=False,
-            chunksize=10000,
-        )
+def create_db_connection_psycopg2():
+    """Create a connection to the PostgreSQL database."""
+    server = environ["DB_SERVER"]
+    database = environ["DB_NAME"]
+    user = environ["DB_USER"]
+    password = environ["DB_PASS"]
+    port = environ["DB_PORT"]
+    conn = psycopg2.connect(
+        host=server, database=database, user=user, password=password, port=port
+    )
+    return conn
+
+
+def insert_df_to_db(data, table_name, schema):
+
+    conn = create_db_connection_psycopg2()
+    tuples = [tuple(x) for x in data.to_numpy()]
+    cols = ",".join(list(data.columns))
+    # SQL query to execute
+    table = schema + "." + table_name
+    query = "INSERT INTO %s(%s) VALUES %%s" % (table, cols)
+    cursor = conn.cursor()
+    try:
+        extras.execute_values(cursor, query, tuples)
+        conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error: %s" % error)
+        conn.rollback()
+        cursor.close()
+        return 1
+    print("the dataframe is inserted")
+    cursor.close()
 
 
 def clean_db(schema, table, yesterday: datetime, days_to_leave_in_db=7):
