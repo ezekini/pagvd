@@ -28,4 +28,4 @@ build/
 .env.*
 
 # Ignore Credentials
-.pem
+*.pem

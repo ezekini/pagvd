@@ -2,6 +2,7 @@ import pandas as pd
 from helpers import get_df_from_s3_csv, create_db_connection, insert_df_to_db, clean_db
 from constants import s3_const, db_const
 from datetime import datetime, timedelta
+from sqlalchemy import text
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,9 +21,10 @@ yesterday = datetime.now() - timedelta(days=1)
 
 
 def get_date_from_db_table(schema, table) -> datetime:
-    query_dates = f"""SELECT MAX(date) AS mindate FROM {schema}.{table} """
-    conn = create_db_connection()
-    df = pd.read_sql(query_dates, conn)
+    query_dates = f"""SELECT MAX(date) AS mindate FROM {schema}.{table}"""
+    engine = create_db_connection()
+    with engine.connect() as connection:  # conn = engine.connect()
+        df = pd.read_sql(text(query_dates), connection)
     if df["mindate"].loc[0] is not None:
         min_date = pd.to_datetime(df["mindate"].iloc[0])
         min_date = min_date.to_pydatetime()
