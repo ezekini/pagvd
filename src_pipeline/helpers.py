@@ -1,6 +1,6 @@
 import boto3
 from os import environ
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, Table, MetaData, insert
 import psycopg2
 import pandas as pd
 from io import StringIO
@@ -59,14 +59,15 @@ def insert_df_to_db(table_name, schema, data):
     engine = create_db_connection()
     df_to_insert = data
     print("Inserting {} values".format(len(df_to_insert)))
-    df_to_insert.to_sql(
-        name=table_name,
-        con=engine,
-        schema=schema,
-        if_exists="append",
-        index=False,
-        chunksize=10000,
-    )
+    with engine.connect() as conn:
+        df_to_insert.to_sql(
+            name=table_name,
+            con=conn,
+            schema=schema,
+            if_exists="append",
+            index=False,
+            chunksize=10000,
+        )
 
 
 def clean_db(schema, table, yesterday: datetime, days_to_leave_in_db=7):
@@ -79,4 +80,3 @@ def clean_db(schema, table, yesterday: datetime, days_to_leave_in_db=7):
     engine = create_db_connection()
     with engine.connect() as connection:
         connection.execute(text(query_delete))
-        connection.commit()
