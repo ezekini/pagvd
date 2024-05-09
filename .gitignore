@@ -5,6 +5,7 @@
 venv/
 env/
 .tp_env/
+.tp_env_api/
 
 # Ignore Python bytecode
 __pycache__/
