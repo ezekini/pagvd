@@ -14,7 +14,7 @@ with DAG(
         "execution_timeout": timedelta(seconds=300),
         "trigger_rule": "all_success",
     },
-    schedule="0 12 * * *",
+    schedule="0 16 * * *",
     start_date=datetime(2024, 4, 30),
     catchup=False,
     dagrun_timeout=timedelta(minutes=30),

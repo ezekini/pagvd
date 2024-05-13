@@ -53,11 +53,15 @@ def recommendations(advertiser: str, model: str):
         SELECT product_id
         FROM public.{model_table}
         WHERE date = (SELECT MAX(date) FROM public.{model_table})
+        AND advertiser_id = '{advertiser}'
         ORDER BY {col} desc
     """
     conn = create_db_connection()
     df = pd.read_sql_query(
-        sql=query.format(model_table=model, col=model_col_names.get(model)), con=conn
+        sql=query.format(
+            model_table=model, col=model_col_names.get(model), advertiser=advertiser
+        ),
+        con=conn,
     )
     return df.to_dict(orient="records")
 
