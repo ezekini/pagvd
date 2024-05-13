@@ -25,12 +25,11 @@ def read_root():
                 - top_product: TOP PRODUCT
 
         -/stats/
-        Esta entrada devuelve un JSON con un resumen de estadísticas sobre las
-        recomendaciones a determinar por ustedes. Algunas opciones posibles:
-        ● Cantidad de advertisers
-        ● Advertisers que más varían sus recomendaciones por día
-        ● Estadísticas de coincidencia entre ambos modelos para los diferentes
-        advs.
+        Esta entrada devuelve un JSON con un resumen de estadísticas sobre coincidencias en las 
+        recomendaciones de ambos modelos para los diferentes advs. y fechas.
+        Para cada advertiser (activo) devuelve el porcentaje de productos coincidentes por
+        fecha. Si alguna fecha no existe para un advertiser es que ese día no hubo coindicencias
+        entre los modelos.
 
         -/history/<ADV>/
         Esta entrada devuelve un JSON con todas las recomendaciones para el
@@ -46,7 +45,8 @@ def recommendations(advertiser: str, model: str):
 
     if not is_valid_advertiser(advertiser=advertiser, model=model):
         raise HTTPException(
-            status_code=404, detail="Advertiser not available for current date"
+            status_code=404,
+            detail="Advertiser does not exist or is not available for current date",
         )
 
     query = """
@@ -81,7 +81,38 @@ def history(advertiser: str):
     if df.empty:
         raise HTTPException(
             status_code=404,
-            detail="Advertiser doesn't exist or isn't present in the last 7 days",
+            detail="Advertiser does not exist or does not have any registers in the last 7 days",
+        )
+
+    return df.to_dict(orient="records")
+
+
+@app.get("/stats")
+def stats():
+    query = """
+        WITH joined_models as (
+            SELECT 	
+                ctr.date, 
+                ctr.advertiser_id, 
+                TO_CHAR(ROUND((CAST(COUNT(ctr.product_id) as NUMERIC))/20,2), 'FM999999990.00') coincidence_pctg
+            FROM top_ctr ctr
+            INNER JOIN top_product prod 
+                ON ctr.date = prod.date 
+                AND ctr.advertiser_id = prod.advertiser_id 
+                AND ctr.product_id = prod.product_id
+        GROUP BY ctr.date, ctr.advertiser_id 
+        )
+        SELECT advertiser_id, date, coincidence_pctg
+        FROM joined_models
+        ORDER BY 1, 2 , 3
+    """
+    conn = create_db_connection()
+    df = pd.read_sql_query(sql=query, con=conn)
+
+    if df.empty:
+        raise HTTPException(
+            status_code=404,
+            detail="There are no coincidences between models for any dates",
         )
 
     return df.to_dict(orient="records")
