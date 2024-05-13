@@ -23,9 +23,9 @@ def sort_and_filter(group):
     return group.sort_values("ctr", ascending=False).head(20)
 
 
-result = df_grouped.groupby(
-    ["date", "advertiser_id", "product_id"], group_keys=False
-).apply(sort_and_filter)
+result = df_grouped.groupby(["date", "advertiser_id"], group_keys=False).apply(
+    sort_and_filter
+)
 result = result.reset_index()
 
 print("Storing computed file in S3 bucket")
