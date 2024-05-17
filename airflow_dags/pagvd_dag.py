@@ -17,6 +17,7 @@ with DAG(
     schedule="0 16 * * *",
     start_date=datetime(2024, 4, 30),
     catchup=False,
+    backfill=False,
     dagrun_timeout=timedelta(minutes=30),
 ) as dag:
 
