@@ -7,7 +7,7 @@ dag_dir = os.path.dirname(os.path.realpath(__file__))
 scripts_folder_path = os.path.join(dag_dir, "..", "src_pipeline")
 
 with DAG(
-    dag_id="pagvd",
+    dag_id="pagvd_v2",
     default_args={
         "retries": 3,
         "retry_delay": timedelta(minutes=5),
