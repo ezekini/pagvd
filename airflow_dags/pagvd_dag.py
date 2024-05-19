@@ -18,6 +18,7 @@ with DAG(
     start_date=datetime(2024, 4, 30),
     catchup=False,
     dagrun_timeout=timedelta(minutes=30),
+    max_active_runs=1,
 ) as dag:
 
     filter_advertisers = BashOperator(
